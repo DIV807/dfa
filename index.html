@@ -53,6 +53,27 @@
       color: red;
       font-weight: bold;
     }
+    svg {
+      width: 100%;
+      height: 200px;
+      margin-top: 20px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .state {
+      fill: white;
+      stroke: #007BFF;
+      stroke-width: 2;
+    }
+    .final-state {
+      stroke-width: 4;
+    }
+    .text {
+      font-weight: bold;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
   </style>
 </head>
 <body>
@@ -73,8 +94,11 @@
   <h2>Final Result</h2>
   <pre id="resultOutput"></pre>
 
-  <h2>Final Automaton</h2>
+  <h2>Final Automaton (Text)</h2>
   <pre id="dfaOutput"></pre>
+
+  <h2>Final Automaton (Diagram)</h2>
+  <div id="dfaDiagram"></div>
 
   <script>
     function simulateDFA() {
@@ -83,6 +107,7 @@
       const traceOut = document.getElementById("traceOutput");
       const resultOut = document.getElementById("resultOutput");
       const dfaOut = document.getElementById("dfaOutput");
+      const dfaDiagram = document.getElementById("dfaDiagram");
 
       let trace = "";
       let accepted = true;
@@ -101,14 +126,14 @@
       }
 
       if (accepted && correct.length === input.length) {
-        trace += "All characters matched → ✅ Accepted\n";
-        resultOut.innerHTML = "<span class='accepted'>✅ Accepted (Password matched!)</span>";
+        trace += "All characters matched → Accepted\n";
+        resultOut.innerHTML = "<span class='accepted'> Accepted (Password matched!)</span>";
       } else if (accepted) {
-        trace += "Length mismatch → ❌ Rejected\n";
+        trace += "Length mismatch →  Rejected\n";
         accepted = false;
-        resultOut.innerHTML = "<span class='rejected'>❌ Rejected (Length mismatch!)</span>";
+        resultOut.innerHTML = "<span class='rejected'> Rejected (Length mismatch!)</span>";
       } else {
-        resultOut.innerHTML = "<span class='rejected'>❌ Rejected (Mismatch found!)</span>";
+        resultOut.innerHTML = "<span class='rejected'> Rejected (Mismatch found!)</span>";
       }
 
       traceOut.textContent = trace;
@@ -120,6 +145,35 @@
       }
       dfa += "  Any mismatch → REJECTED\n";
       dfaOut.textContent = dfa;
+
+      // DFA Diagram
+      let svg = `<svg xmlns="http://www.w3.org/2000/svg">`;
+      const radius = 25;
+      const spacing = 100;
+      for (let i = 0; i <= correct.length; i++) {
+        let cx = 50 + i * spacing;
+        let cy = 100;
+        let isFinal = (i === correct.length);
+        svg += `<circle class="state ${isFinal ? "final-state" : ""}" cx="${cx}" cy="${cy}" r="${radius}"/>`;
+        svg += `<text class="text" x="${cx}" y="${cy}">q${i}</text>`;
+        if (i < correct.length) {
+          let nextCx = 50 + (i + 1) * spacing;
+          svg += `<text x="${(cx + nextCx)/2}" y="${cy - 35}" text-anchor="middle" font-size="14">${correct[i]}</text>`;
+          svg += `<line x1="${cx + radius}" y1="${cy}" x2="${nextCx - radius}" y2="${cy}" stroke="#333" marker-end="url(#arrow)"/>`;
+        }
+      }
+
+      // Arrowhead definition
+      svg += `
+        <defs>
+          <marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L9,3 z" fill="#333" />
+          </marker>
+        </defs>
+      `;
+
+      svg += `</svg>`;
+      dfaDiagram.innerHTML = svg;
     }
   </script>
 
